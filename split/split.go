@@ -1,5 +1,6 @@
 //@author Devansh Gupta
 //facebook.com/devansh42
+//github.com/devansh42
 //This is the source code of Secret Split Algorithm being used in our Project
 
 package split
@@ -9,7 +10,9 @@ import (
 )
 
 const (
-	PASSSIZE    = 32
+	//PASSSIZE User password size 256 bits
+	PASSSIZE = 32
+	//IPFSCIDSIZE CID for the UIT Tree
 	IPFSCIDSIZE = 32
 )
 
