@@ -12,4 +12,8 @@ CREATE TABLE `apps` (
 /**
 Table to manage username and public address pairing
 */
-CREATE TABLE users(USERNAME varchar(100) NOT NULL UNIQUE,PUBADDR binary(28) NOT NULL);
+CREATE TABLE `users` (
+  `USERNAME` varchar(100) DEFAULT NULL,
+  `PUBADDR` varchar(100) DEFAULT NULL,
+  UNIQUE KEY `USERNAME` (`USERNAME`)
+);
