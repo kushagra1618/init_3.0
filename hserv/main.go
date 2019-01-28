@@ -5,26 +5,28 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
+	"init/hserv/pages"
 	"init/utils"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/mr-tron/base58"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	http.HandleFunc("/create/app", create_app_handler)
-
+	http.HandleFunc("/create/app", createapphandler)
+	http.HandleFunc("/create/user", createuserhandler)
 	log.Fatal(http.ListenAndServe("localhost:5050", nil))
 	fmt.Println("Listening at 5050")
 }
 
 //Handler for New App creation
-func create_app_handler(resp http.ResponseWriter, req *http.Request) {
+func createapphandler(resp http.ResponseWriter, req *http.Request) {
 	var res = make(map[string]interface{})
 	if strings.ToLower(req.Method) == "post" {
 		req.ParseForm() //Parsing Form
@@ -36,7 +38,7 @@ func create_app_handler(resp http.ResponseWriter, req *http.Request) {
 			info.Domain = form.Get("domain")
 			info.Contact = form.Get("contact")
 			info.Pubkey = form.Get("pubkey")
-			var iscreated = CreateAppinDb(&info)
+			var iscreated = pages.CreateAppinDb(&info)
 			res["id"] = info.Id
 			res["name"] = info.Name
 			res["code"] = utils.CondOp(iscreated, http.StatusCreated, http.StatusFound)
@@ -51,38 +53,34 @@ func create_app_handler(resp http.ResponseWriter, req *http.Request) {
 
 }
 
-//Creates App in the Database
-func CreateAppinDb(info *utils.NodeInfo) bool {
+//This function handles user creatation
+func createuserhandler(resp http.ResponseWriter, req *http.Request) {
+	if strings.ToLower(req.Method) == "post" {
+		req.ParseForm()
+		var fr = req.Form
+		var user = make(utils.UserInfo)
+		user[utils.GetUserInfoKey("fname")] = fr.Get("fname")
+		user[utils.GetUserInfoKey("mname")] = fr.Get("mname")
+		user[utils.GetUserInfoKey("lname")] = fr.Get("lname")
+		user[utils.GetUserInfoKey("dob")] = fr.Get("dob")
+		user[utils.GetUserInfoKey("gender")] = fr.Get("gender")
+		user[utils.GetUserInfoKey("username")] = fr.Get("username")
+		user[utils.GetUserInfoKey("password")] = fr.Get("password")
+		user, iscreated := pages.CreateUser(user) //Creation of user on ipfs network
+		resp.WriteHeader(http.StatusOK)
 
-	db, err := sql.Open("mysql", "root:root@/init")
-	checkerr(err)
-	defer db.Close()
-	stmt, err := db.Prepare("SELECT ID,NAME FROM apps where EMAIL=?")
-	checkerr(err)
-	defer stmt.Close()
-	row, err := stmt.Query(info.Email)
-	checkerr(err)
-	defer row.Close()
-	if row.Next() {
-		row.Scan(&info.Id, &info.Name)
-		return false
-	} else { //Creating new App id
-		//pr, pu := utils.GenerateRsaKeyPair()
-		stmt, err := db.Prepare("INSERT INTO apps(NAME,EMAIL,DOMAIN,CONTACT,RSAPUBKEY)VALUES(?,?,?,?,?)")
-		checkerr(err)
-		rs, err := stmt.Exec(info.Name, info.Email, info.Domain, info.Contact, info.Pubkey)
-		checkerr(err)
-		id, err := rs.LastInsertId()
-		info.Id = id
+		if iscreated {
 
+			passcode := base58.Encode(user[utils.GetUserInfoKey("passcode")].([]byte))
+			pubaddr := base58.Encode(user[utils.GetUserInfoKey("pubaddr")].([]byte))
+			var v = make(map[string]interface{})
+			v["code"] = passcode
+			v["addr"] = pubaddr
+			b, _ := json.Marshal(v)
+			resp.Header().Set("content-type", "application/json")
+			resp.Write(b)
+		} else {
+			resp.Write([]byte("Couldn't make it"))
+		}
 	}
-	return true
-
-}
-
-func checkerr(err error) {
-	if err != nil {
-		panic(err)
-	}
-
 }

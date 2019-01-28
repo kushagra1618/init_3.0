@@ -170,3 +170,14 @@ func (s Secret) recalculateCid() (bcid []byte, err error) {
 	}
 	return
 }
+
+func XorArrays(ar1, ar2 []byte) (ar []byte, err error) {
+	if len(ar1) == len(ar2) {
+		for i := 0; i < len(ar1); i++ {
+			ar = append(ar, ar1[i]^ar2[i])
+		}
+	} else {
+		err = errors.New("Arrays should of same length")
+	}
+	return
+}

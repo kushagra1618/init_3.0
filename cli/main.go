@@ -33,7 +33,7 @@ var logfile *os.File
 
 func parseArgs() {
 	do := flag.String("do", "", "Process command against current node")
-	port := flag.Int("port", FRIENDNODEPORT, fmt.Sprint("Start node at given port default is ", FRIENDNODEPORT))
+	port := flag.Int("port", utils.FRIENDNODEPORT, fmt.Sprint("Start node at given port default is ", utils.FRIENDNODEPORT))
 	flag.Parse()
 	switch *do {
 	case "start":
@@ -47,7 +47,7 @@ func parseArgs() {
 
 //This function handles Initialization of node
 func startNode(port int) {
-	listener, err := net.Listen(TRANSPORTPROTOCOL, fmt.Sprintf("localhost:%d", port))
+	listener, err := net.Listen(utils.TRANSPORTPROTOCOL, fmt.Sprintf("localhost:%d", port))
 
 	if err != nil {
 		Log.Println("There is a Problem,", err)
@@ -104,7 +104,7 @@ func registerNode() {
 	m.Set("contact", info.Contact)
 	m.Set("mode", "create")
 	fmt.Println("Sending request to Web Http Server..")
-	resp, err := http.PostForm(fmt.Sprintf("%s/create/app", MAINNODEWEBADDR), m)
+	resp, err := http.PostForm(fmt.Sprintf("%s/create/app", utils.MAINNODEWEBADDR), m)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -136,8 +136,4 @@ func registerNode() {
 
 	}
 
-}
-
-func getformvalue(v string) []string {
-	return []string{v}
 }

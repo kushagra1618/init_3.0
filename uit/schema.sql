@@ -9,3 +9,7 @@ CREATE TABLE `apps` (
   PRIMARY KEY (`ID`),
   UNIQUE KEY `EMAIL` (`EMAIL`)
 ); 
+/**
+Table to manage username and public address pairing
+*/
+CREATE TABLE users(USERNAME varchar(100) NOT NULL UNIQUE,PUBADDR binary(28) NOT NULL);
