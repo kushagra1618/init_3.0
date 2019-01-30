@@ -5,7 +5,7 @@ import (
 	"net"
 )
 
-func main() {
+func fun() {
 	l, err := net.Listen("tcp", "localhost:5000")
 	if err != nil {
 		fmt.Println(err)
@@ -20,6 +20,10 @@ func main() {
 		defer conn.Close()
 		go handelIO(conn)
 	}
+
+}
+func main() {
+	//Does nothing
 }
 
 func handelIO(conn net.Conn) {

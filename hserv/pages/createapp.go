@@ -9,6 +9,8 @@ import (
 	"encoding/hex"
 	"init/utils"
 
+	"github.com/mr-tron/base58"
+
 	_ "github.com/go-sql-driver/mysql" //Mysql Driver for golang
 )
 
@@ -29,10 +31,10 @@ func CreateAppinDb(info *utils.NodeInfo) bool {
 		row.Scan(&info.Id, &info.Name)
 		return false
 	} else { //Creating new App id
+		bpubkey, _ := hex.DecodeString(info.Pubkey)
 		stmt, err := db.Prepare("INSERT INTO apps(NAME,EMAIL,DOMAIN,CONTACT,RSAPUBKEY)VALUES(?,?,?,?,?)")
 		checkerr(err)
-		bpubkey, _ := hex.DecodeString(info.Pubkey) //Coverting hex decimal pubkey to byte array for space efficency
-		rs, err := stmt.Exec(info.Name, info.Email, info.Domain, info.Contact, bpubkey)
+		rs, err := stmt.Exec(info.Name, info.Email, info.Domain, info.Contact, base58.Encode(bpubkey))
 		checkerr(err)
 		id, err := rs.LastInsertId()
 		info.Id = id

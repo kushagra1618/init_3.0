@@ -13,6 +13,11 @@ import (
 	"init/split"
 	"init/utils"
 
+	"github.com/btcsuite/btcd/btcec"
+
+	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcutil/hdkeychain"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/mr-tron/base58"
 
@@ -27,8 +32,10 @@ func CreateUser(user utils.UserInfo) (utils.UserInfo, bool) {
 	username := user[utils.GetUserInfoKey("username")].(string)
 	delete(user, utils.GetUserInfoKey("password")) //This deletes password from user info map
 	delete(user, utils.GetUserInfoKey("username")) //This deletes username from user info map
-	bb, _ := json.Marshal(user)
+	_, pu := getPKIPair(username, password)
 
+	bb, _ := json.Marshal(user)
+	bb, _ = encryptUIT(bb, pu) //Encrypts UIT of the user
 	buf := bytes.NewBuffer(bb)
 	s := shell.NewShell(utils.LOCALIPFSADDR) //Calling IPFS Shell
 
@@ -93,4 +100,34 @@ func createPairingOfUsernameAndAddr(usernamestr string, pubaddr []byte) error {
 		_, err = stmt.Exec((susername), (spubaddr))
 	}
 	return err
+}
+
+//Password is double hashed because it will prevent
+//xor operation to nullify everything as a^a=0
+//username and password is same then seed will be 0000000000000000000000000...
+func getPKIPair(username, password string) (*btcec.PrivateKey, *btcec.PublicKey) {
+	var busername, bpassword = []byte(username), []byte(password)
+	busername = utils.Sha256Hash(busername)
+	bpassword = utils.Sha256Hash(utils.Sha256Hash(bpassword))
+	seed, _ := split.XorArrays(busername, bpassword)
+	master, _ := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
+	var x uint32 = 0
+	for !master.IsPrivate() {
+		master, _ := master.Child(hdkeychain.HardenedKeyStart + x)
+		master.ECPrivKey() //Just to supperess an error
+		x = x + 1
+	}
+	prk, _ := master.ECPrivKey()
+
+	return prk, prk.PubKey()
+}
+
+//This function encrypts uit tree with user's public key
+func encryptUIT(bb []byte, pu *btcec.PublicKey) ([]byte, error) {
+	return btcec.Encrypt(pu, bb)
+}
+
+//This function decrypts uit tree with user's private key
+func decryptUIT(bb []byte, pr *btcec.PrivateKey) ([]byte, error) {
+	return btcec.Decrypt(pr, bb)
 }
