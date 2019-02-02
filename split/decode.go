@@ -5,6 +5,8 @@
 
 package split
 
+import "errors"
+
 //recalculateCid, Internal method to calculate Cid
 func (s Secret) recalculateCid() (bcid []byte, err error) {
 

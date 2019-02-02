@@ -5,6 +5,8 @@
 
 package split
 
+import "errors"
+
 //calculateAddrAndCode, Internal method of calculating addr,passcode
 func (s Secret) calculateAddrAndCode() (baddr, bcode []byte, err error) {
 	if len(s.hashedPassword) == len(s.cid) {
