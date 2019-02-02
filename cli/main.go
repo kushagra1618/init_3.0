@@ -5,6 +5,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
@@ -18,6 +19,10 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+)
+
+const (
+	NEWLINECHAR = '\n'
 )
 
 func main() {
@@ -64,6 +69,34 @@ func startNode(port int) {
 		defer conn.Close()
 		go io.Copy(os.Stdout, conn)
 	}
+
+}
+
+//This function handels socket level connection i/o
+func handelIO(conn net.Conn) {
+	defer conn.Close()
+	r, w := io.Pipe()
+	io.Copy(w, conn)
+	var b = make([]byte, 32) //32 Bytes Buffer
+	var buf = new(bytes.Buffer)
+	for {
+		n, err := r.Read(b)
+		buf.Write(b[:n])
+
+		if err != nil {
+			return
+		}
+		if b[n-1] == NEWLINECHAR {
+			msg, _ := buf.ReadBytes(NEWLINECHAR)
+			handelMsg(msg)
+			buf.Reset()
+		}
+
+	}
+}
+
+//Handels outgoing and incoming message
+func handelMsg(msg []byte) {
 
 }
 
