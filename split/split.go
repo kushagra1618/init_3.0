@@ -3,6 +3,7 @@
 //github.com/devansh42
 //This is the source code of Secret Split Algorithm being used in our Project
 
+
 package split
 
 import (
@@ -108,69 +109,7 @@ func (s Secret) RecalculateCid() (cid []byte, err error) {
 
 }
 
-//calculateAddrAndCode, Internal method of calculating addr,passcode
-func (s Secret) calculateAddrAndCode() (baddr, bcode []byte, err error) {
-	if len(s.hashedPassword) == len(s.cid) {
-		bpass := (s.hashedPassword)
-		bcid := (s.cid)
-
-		var bb []byte
-
-		for i := 0; i < IPFSCIDSIZE; i++ {
-			bb = append(bb, bpass[i]^bcid[i])
-		}
-		for x := 0; x < 4; x++ {
-			bcode = append(bcode, xor(bb[0+8*x:8+8*x]))
-		}
-		for y := 0; y < IPFSCIDSIZE; y++ {
-			if y == 0 || y == 8 || y == 16 || y == 24 {
-
-			} else {
-				baddr = append(baddr, bb[y])
-			}
-		}
-
-	} else {
-		err = errors.New("Password and Cid should be of same length")
-	}
-	return
-}
-
-//recalculateCid, Internal method to calculate Cid
-func (s Secret) recalculateCid() (bcid []byte, err error) {
-
-	if len(s.hashedPassword) == PASSSIZE {
-		bpass := (s.hashedPassword)
-		bcode := (s.passcode)
-		baddr := (s.addr)
-		var bb, missing []byte
-		for x := 0; x < 4; x++ {
-			y := xor(baddr[0+7*x:7+7*x]) ^ bcode[x]
-			missing = append(missing, y)
-
-		}
-
-		o, p := 0, 0
-		for x := 0; x < IPFSCIDSIZE; x++ {
-			if x == 0 || x == 8 || x == 16 || x == 24 {
-				bb = append(bb, missing[o])
-				o++
-			} else {
-				bb = append(bb, baddr[p])
-				p++
-			}
-		}
-		for x := 0; x < IPFSCIDSIZE; x++ {
-
-			bcid = append(bcid, bpass[x]^bb[x])
-		}
-
-	} else {
-		return nil, errors.New("Invalid Password")
-	}
-	return
-}
-
+//This function xor to arrays of same length
 func XorArrays(ar1, ar2 []byte) (ar []byte, err error) {
 	if len(ar1) == len(ar2) {
 		for i := 0; i < len(ar1); i++ {
