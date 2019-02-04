@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"init/split"
 	"init/utils"
@@ -30,16 +29,12 @@ func CreateUser(user utils.UserInfo) (utils.UserInfo, bool) {
 
 	password := user[utils.GetUserInfoKey("password")].(string)
 	username := user[utils.GetUserInfoKey("username")].(string)
-	delete(user, utils.GetUserInfoKey("password")) //This deletes password from user info map
-	delete(user, utils.GetUserInfoKey("username")) //This deletes username from user info map
 	_, pu := getPKIPair(username, password)
+	bb := createUserFB(user) //Creation of FlatBuffer of User data
 
-	bb, _ := json.Marshal(user)
-	bb, _ = encryptUIT(bb, pu) //Encrypts UIT of the user
-	buf := bytes.NewBuffer(bb)
-	s := shell.NewShell(utils.LOCALIPFSADDR) //Calling IPFS Shell
+	bb, _ = encryptUIT(bb, pu)  //Encrypts UIT of the user
+	ucid, err := addToIPFS(&bb) //Added Userfile into ipfs
 
-	ucid, err := s.Add(buf) //Added Userfile into ipfs
 	checkerr(err)
 	bytecid, _ := base58.Decode(ucid) //Decode Cid from base58 to byte array
 	//Taking 32 bytes from last of the decoded cid
@@ -130,4 +125,12 @@ func encryptUIT(bb []byte, pu *btcec.PublicKey) ([]byte, error) {
 //This function decrypts uit tree with user's private key
 func decryptUIT(bb []byte, pr *btcec.PrivateKey) ([]byte, error) {
 	return btcec.Decrypt(pr, bb)
+}
+
+//addToIPFS, add uit to the ipfs network
+func addToIPFS(bb *[]byte) (string, error) {
+	s := shell.NewShell(utils.LOCALIPFSADDR)
+	b := bytes.NewBuffer(*bb)
+	return s.Add(b)
+
 }
