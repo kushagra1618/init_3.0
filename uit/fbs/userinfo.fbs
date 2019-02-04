@@ -1,0 +1,36 @@
+//@author Devansh Gupta
+//facebook.com/devansh42
+//gihub.com/devansh42
+//This file contains schema of UserInfoTree 
+
+namespace fb;
+
+struct Dob{ //Date of Birth Struct
+    day:ubyte;
+    month:ubyte;
+    year:short;
+}
+
+struct ContactNo    { //Contact no of user
+    country_code:byte;
+    number:ulong;
+}
+
+
+enum Gender:byte{ //Gender of the user
+    MALE=1,FEMALE,TRANSGENDER,NOT_SPECIFIED}
+
+table UserInfo{ //Root table
+
+fname:string;
+mname:string;
+lname:string;
+dob:string;
+email:string;
+gender:Gender=MALE;//Default is male
+contact_no:ContactNo;
+country:byte;   //This is the coutry of the user
+
+}
+
+root_type UserInfo; //Root Declaration
